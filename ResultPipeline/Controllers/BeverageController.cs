@@ -1,11 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 using FluentResults;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using ResultPipeline.Commands;
-using ResultPipeline.Entities;
 using ResultPipeline.Queries;
 using ResultPipeline.Requests;
 
@@ -23,11 +20,21 @@ namespace ResultPipeline.Controllers
         }
 
         [HttpGet]
-        public Task<IEnumerable<Beverage>> GetAllBeverages()
-            => _mediator.Send(new GetAllBeveragesQuery());
+        public async Task<IActionResult> GetAllBeverages()
+        {
+            var result = await _mediator.Send(new GetAllBeveragesQuery());
+
+            if (result.IsFailed)
+            {
+                return BadRequest(result.ToResult());
+            }
+
+            return Ok(result.Value);
+
+        }
 
         [HttpPost]
-        public Task<Result> CreateBeverage([FromBody] RequestCreateBeverage request)
-            => _mediator.Send(new CreateBeverageCommand(request));
+        public async Task<IActionResult> CreateBeverage([FromBody] RequestCreateBeverage request)
+            =>  Ok(await _mediator.Send(new CreateBeverageCommand(request)));
     }
 }

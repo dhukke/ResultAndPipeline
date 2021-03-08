@@ -9,9 +9,9 @@ namespace ExceptionDriven.Queries
 {
     public class GetAllFoodsQuery : RequestWithUser, IRequest<IEnumerable<Food>>{}
 
-    public class GetAllCarsQueryHandler : IRequestHandler<GetAllFoodsQuery, IEnumerable<Food>>
+    public class GetAllFoodsHandler : IRequestHandler<GetAllFoodsQuery, IEnumerable<Food>>
     {
-        public GetAllCarsQueryHandler()
+        public GetAllFoodsHandler()
         {
         }
 

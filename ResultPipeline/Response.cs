@@ -1,32 +1,62 @@
-﻿namespace ResultPipeline
-{
-    public static class Response
-    {
-        public static Response<T> Fail<T>(
-            string message,
-            T data = default
-        )
-            => new Response<T>(data, message, true);
+﻿using System.Collections.Generic;
+using System.Linq;
+using FluentResults;
 
-        public static Response<T> Ok<T>(T data, string message)
-            => new Response<T>(data, message, false);
+namespace ResultPipeline
+{
+    public class ResultDto
+    {
+        public bool IsSuccess { get; set; }
+
+        public IEnumerable<ErrorDto> Errors { get; set; }
+
+        public ResultDto(bool isSuccess, IEnumerable<ErrorDto> errors)
+        {
+            IsSuccess = isSuccess;
+            Errors = errors;
+        }
     }
 
-    public class Response<T>
+    public class ErrorDto
     {
-        public Response(
-            T data,
-            string msg,
-            bool error
-        )
+        public string Message { get; set; }
+
+        public string Code { get; set; }
+
+        public ErrorDto(string message, string code)
         {
-            Data = data;
-            Message = msg;
-            Error = error;
+            Message = message;
+            Code = code;
+        }
+    }
+    public static class ResultDtoExtensions
+    {
+        public static ResultDto ToResultDto(this Result result)
+        {
+            if (result.IsSuccess)
+                return new ResultDto(true, Enumerable.Empty<ErrorDto>());
+
+            return new ResultDto(false, TransformErrors(result.Errors));
         }
 
-        public T Data { get; set; }
-        public string Message { get; set; }
-        public bool Error { get; set; }
+        private static IEnumerable<ErrorDto> TransformErrors(List<Error> errors)
+        {
+            return errors.Select(TransformError);
+        }
+
+        private static ErrorDto TransformError(Error error)
+        {
+            var errorCode = TransformErrorCode(error);
+
+            return new ErrorDto(error.Message, errorCode);
+        }
+
+        private static string TransformErrorCode(Error error)
+        {
+            if (error.Metadata.TryGetValue("ErrorCode", out var errorCode))
+                return errorCode as string;
+
+            return "";
+        }
     }
 }

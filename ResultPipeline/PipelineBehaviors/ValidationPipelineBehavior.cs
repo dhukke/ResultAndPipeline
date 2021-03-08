@@ -1,4 +1,6 @@
-﻿using System.Threading;
+﻿using System.Collections.Generic;
+using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using FluentResults;
 using FluentValidation;
@@ -7,21 +9,20 @@ using Microsoft.Extensions.Logging;
 
 namespace ResultPipeline.PipelineBehaviors
 {
-    public class ValidationPipelineBehavior<TRequest, TResponse>
-        : IPipelineBehavior<TRequest, TResponse>
+    public class ValidationPipelineBehavior<TRequest, TResponse> : IPipelineBehavior<TRequest, TResponse>
         where TResponse : ResultBase, new()
     {
-        private readonly IValidator<TRequest> _compositeValidator;
 
         private readonly ILogger<ValidationPipelineBehavior<TRequest, TResponse>> _logger;
-
+        private readonly IEnumerable<IValidator<TRequest>> _validators;
 
         public ValidationPipelineBehavior(
-            IValidator<TRequest> compositeValidator,
-            ILogger<ValidationPipelineBehavior<TRequest, TResponse>> logger
-        )
+
+            ILogger<ValidationPipelineBehavior<TRequest, TResponse>> logger,IEnumerable<IValidator<TRequest>> validators
+            )
         {
-            _compositeValidator = compositeValidator;
+            _validators = validators;
+
             _logger = logger;
         }
 
@@ -33,22 +34,24 @@ namespace ResultPipeline.PipelineBehaviors
         {
             _logger.LogInformation($"Validanting Request {typeof(TRequest).Name} {request}");
 
-            var result = await _compositeValidator.ValidateAsync(request, cancellationToken);
+            if (!_validators.Any()) return await next();
 
-            if (result.IsValid) return await next();
+            var context = new ValidationContext<TRequest>(request);
 
-            var error = new Error();
+            var validationResults = await Task.WhenAll(_validators.Select(v => v.ValidateAsync(context, cancellationToken)));
+            var errors  = validationResults.SelectMany(r => r.Errors).Where(f => f != null).ToList();
 
-            foreach (var validationFailure in result.Errors)
+            if(!errors.Any())  return await next();
+
+            var error = new List<ResultBase>();
+
+            foreach (var validationFailure in errors)
             {
                 _logger.LogInformation($"Validation message: {validationFailure}");
-                error.Reasons.Add(new Error(validationFailure.ErrorMessage));
+                error.Add(Result.Fail((validationFailure.ErrorMessage)));
             }
-            // "Result.Fail<TResponse>(error);" should be "Result.Fail(error) as TResponse;"
-            // This caused a build error as it could not implicitly cast this to TResponse,
-            // I tried to solve this by adding "as TResponse" but this in turn caused the return value to always be null;
-            // The solution was to remove the "<TResponse>" and then it worked!
-            return Result.Fail(error) as TResponse;
+
+            return Result.Merge(error.ToArray()) as TResponse;
 
         }
     }

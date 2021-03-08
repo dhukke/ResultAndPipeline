@@ -14,22 +14,20 @@ namespace ResultPipeline.Filters
 
         public void OnActionExecuted(ActionExecutedContext context)
         {
-
             var iActionResult = context.Result;
-            if (((ObjectResult) iActionResult).Value is Result result)
-            {
-                if (result.IsFailed)
-                {
-                    context.Result = new ObjectResult(
-                        result.Errors.Select(
-                            x => new ErrorResponse("400", x.Message)
-                        )
-                    )
-                    {
-                        StatusCode = 400
-                    };
-                }
 
+            if (((ObjectResult) iActionResult).Value is not Result result) return;
+
+            if (result.IsFailed)
+            {
+                context.Result = new ObjectResult(
+                    result.Errors.Select(
+                        x => new ErrorResponse("400", x.Message)
+                    )
+                )
+                {
+                    StatusCode = 400
+                };
             }
         }
 
