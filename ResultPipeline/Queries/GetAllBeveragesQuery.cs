@@ -17,9 +17,9 @@ namespace ResultPipeline.Queries
             CancellationToken cancellationToken
         )
         {
-            return Task.FromResult(
-                Result.Fail<GetAllBeveragesResponse>("ErrorCode22")
-            );
+            // return Task.FromResult(
+            //     Result.Fail<GetAllBeveragesResponse>("ErrorCode22")
+            // );
 
             return Task.FromResult(
                 Result.Ok(GetBeverages())

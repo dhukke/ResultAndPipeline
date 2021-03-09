@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using ResultPipeline.Commands;
 using ResultPipeline.Queries;
 using ResultPipeline.Requests;
+using ResultPipeline.Responses;
 
 namespace ResultPipeline.Controllers
 {
@@ -20,7 +21,7 @@ namespace ResultPipeline.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllBeverages()
+        public async Task<ActionResult<GetAllBeveragesResponse>> GetAllBeverages()
         {
             var result = await _mediator.Send(new GetAllBeveragesQuery());
 

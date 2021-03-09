@@ -12,6 +12,7 @@
       <PackageReference Include="MediatR.Extensions.Microsoft.DependencyInjection" Version="9.0.0" />
       <PackageReference Include="Serilog.AspNetCore" Version="3.4.0" />
       <PackageReference Include="Serilog.Enrichers.Environment" Version="2.2.0-dev-00777" />
+      <PackageReference Include="Swashbuckle.AspNetCore" Version="6.1.0" />
     </ItemGroup>
 
 </Project>
