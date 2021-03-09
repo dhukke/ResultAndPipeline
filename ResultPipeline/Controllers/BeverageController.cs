@@ -21,9 +21,9 @@ namespace ResultPipeline.Controllers
         }
 
         [HttpGet]
-        public async Task<ActionResult<GetAllBeveragesResponse>> GetAllBeverages()
+        public async Task<ActionResult<GetAllBeveragesResponse>> GetAllBeverages([FromQuery] string fail)
         {
-            var result = await _mediator.Send(new GetAllBeveragesQuery());
+            var result = await _mediator.Send(new GetAllBeveragesQuery(fail));
 
             if (result.IsFailed)
             {

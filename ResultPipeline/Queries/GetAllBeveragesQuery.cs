@@ -1,14 +1,23 @@
-﻿using System.Collections.Generic;
+﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
 using FluentResults;
 using MediatR;
 using ResultPipeline.Entities;
+using ResultPipeline.Models;
 using ResultPipeline.Responses;
 
 namespace ResultPipeline.Queries
 {
-    public class GetAllBeveragesQuery : IRequest<Result<GetAllBeveragesResponse>>{}
+    public class GetAllBeveragesQuery : RequestWithUser, IRequest<Result<GetAllBeveragesResponse>>
+    {
+        public GetAllBeveragesQuery(string fail)
+        {
+            Fail = fail;
+        }
+
+        public string Fail { get; }
+    }
 
     public class GetAllBeveragesHandler : IRequestHandler<GetAllBeveragesQuery, Result<GetAllBeveragesResponse>>
     {
@@ -17,23 +26,25 @@ namespace ResultPipeline.Queries
             CancellationToken cancellationToken
         )
         {
-            // return Task.FromResult(
-            //     Result.Fail<GetAllBeveragesResponse>("ErrorCode22")
-            // );
+            if (request.Fail == "fail")
+            {
+                return Task.FromResult(
+                    Result.Fail<GetAllBeveragesResponse>("Code22:ShouldFailToGet")
+                );
+            }
 
             return Task.FromResult(
-                Result.Ok(GetBeverages())
+                Result.Ok(GetBeverages(request.UserId))
             );
         }
 
-        private static GetAllBeveragesResponse GetBeverages()
+        private static GetAllBeveragesResponse GetBeverages(Guid requestUserId)
         {
-            return new GetAllBeveragesResponse
+            return new()
             {
-                Beverages = new List<Beverage>
-                {
-                    new Beverage {Name = "Burguer"},
-                    new Beverage {Name = "Mango"},
+                Beverages = new[] {
+                    new Beverage { Name = $"Beer for {requestUserId}" },
+                    new Beverage { Name = $"Water for {requestUserId}" },
                 }
             };
         }

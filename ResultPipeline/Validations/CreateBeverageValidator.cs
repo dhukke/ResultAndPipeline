@@ -11,7 +11,7 @@ namespace ResultPipeline.Validations
                 .MaximumLength(200)
                 .WithErrorCode("01")
                 .NotEmpty()
-                .WithErrorCode("02");
+                .WithErrorCode("Code01:NotEmpty");
         }
     }
 }
